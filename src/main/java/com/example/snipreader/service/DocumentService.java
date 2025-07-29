@@ -249,7 +249,7 @@ public class DocumentService {
             // Process each question set
             for (QuestionSet questionSet : questionSets) {
                 // Add question set title and date
-                Paragraph setTitle = new Paragraph("Set " + setCounter + ": " + questionSet.getTitle(), HEADING_FONT);
+                Paragraph setTitle = new Paragraph(questionSet.getTitle(), HEADING_FONT);
                 setTitle.setAlignment(Element.ALIGN_LEFT);
                 document.add(setTitle);
                 
@@ -352,7 +352,7 @@ public class DocumentService {
                 // Add question set title and date
                 XWPFParagraph setTitleParagraph = document.createParagraph();
                 XWPFRun setTitleRun = setTitleParagraph.createRun();
-                setTitleRun.setText("Set " + setCounter + ": " + questionSet.getTitle());
+                setTitleRun.setText(questionSet.getTitle());
                 setTitleRun.setBold(true);
                 setTitleRun.setFontSize(16);
                 

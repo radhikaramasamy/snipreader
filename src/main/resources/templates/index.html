@@ -133,7 +133,10 @@
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <button id="processPastedBtn" type="submit" class="btn btn-primary" disabled>Process Pasted Image</button>
+                            <button id="processPastedBtn" type="submit" class="btn btn-primary" disabled>
+                                <span class="spinner-border spinner-border-sm me-2 d-none" id="pasteSpinner" role="status" aria-hidden="true"></span>
+                                <span id="pasteButtonText">Process Pasted Image</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -148,7 +151,10 @@
                         </div>
                         
                         <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">Upload and Process</button>
+                            <button id="uploadBtn" type="submit" class="btn btn-primary">
+                                <span class="spinner-border spinner-border-sm me-2 d-none" id="uploadSpinner" role="status" aria-hidden="true"></span>
+                                <span id="uploadButtonText">Upload and Process</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -175,6 +181,13 @@
             const pastedImage = document.getElementById('pastedImage');
             const base64ImageInput = document.getElementById('base64Image');
             const processPastedBtn = document.getElementById('processPastedBtn');
+            const pasteSpinner = document.getElementById('pasteSpinner');
+            const pasteButtonText = document.getElementById('pasteButtonText');
+            const uploadBtn = document.getElementById('uploadBtn');
+            const uploadSpinner = document.getElementById('uploadSpinner');
+            const uploadButtonText = document.getElementById('uploadButtonText');
+            const pasteForm = document.getElementById('pasteForm');
+            const uploadForm = document.querySelector('#upload-pane form');
             
             // Function to handle pasted image
             function handlePaste(e) {
@@ -205,6 +218,22 @@
                     }
                 }
             }
+            
+            // Function to show loading state on paste form submission
+            pasteForm.addEventListener('submit', function() {
+                // Show spinner and change button text
+                pasteSpinner.classList.remove('d-none');
+                pasteButtonText.textContent = 'Processing...';
+                processPastedBtn.disabled = true;
+            });
+            
+            // Function to show loading state on upload form submission
+            uploadForm.addEventListener('submit', function() {
+                // Show spinner and change button text
+                uploadSpinner.classList.remove('d-none');
+                uploadButtonText.textContent = 'Processing...';
+                uploadBtn.disabled = true;
+            });
             
             // Add event listeners
             pasteArea.addEventListener('click', function() {
