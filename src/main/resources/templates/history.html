@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ History - Snip Reader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            max-width: 900px;
+            margin-top: 30px;
+            margin-bottom: 50px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .history-card {
+            margin-bottom: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s;
+        }
+        .history-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+        .empty-history {
+            text-align: center;
+            padding: 40px;
+            background-color: #f8f9fa;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        .back-button {
+            margin-top: 20px;
+        }
+        .download-buttons {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            margin-right: 10px;
+        }
+        .select-checkbox {
+            margin-right: 10px;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+        }
+        .history-content {
+            flex-grow: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCQ History</h1>
+            <p class="lead">View your previously processed MCQ questions</p>
+        </div>
+        
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        
+        <div class="empty-history" th:if="${#lists.isEmpty(questionSets)}">
+            <h4>No history found</h4>
+            <p>You haven't processed any MCQ questions yet. Upload or paste an image to get started.</p>
+            <a th:href="@{/}" class="btn btn-primary mt-3">Go to Upload</a>
+        </div>
+        
+        <div th:unless="${#lists.isEmpty(questionSets)}">
+            <form id="downloadForm" method="post" th:action="@{/download-selected}">
+                <div class="download-buttons">
+                    <button type="button" id="selectAllBtn" class="btn btn-outline-primary btn-sm">Select All</button>
+                    <button type="button" id="deselectAllBtn" class="btn btn-outline-secondary btn-sm">Deselect All</button>
+                    <button type="submit" name="format" value="pdf" class="btn btn-danger" disabled id="downloadPdfBtn">Download Selected as PDF</button>
+                    <button type="submit" name="format" value="word" class="btn btn-primary" disabled id="downloadWordBtn">Download Selected as Word</button>
+                </div>
+                
+                <div class="list-group">
+                    <div th:each="set : ${questionSets}" class="list-group-item history-card">
+                        <div class="history-item">
+                            <div class="checkbox-container">
+                                <input type="checkbox" class="select-checkbox form-check-input" name="selectedSets" th:value="${set.id}">
+                            </div>
+                            <div class="history-content">
+                                <a th:href="@{/results/{id}(id=${set.id})}" class="text-decoration-none">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1" th:text="${set.title}">Question Set Title</h5>
+                                        <small th:text="${#temporals.format(set.createdAt, 'yyyy-MM-dd HH:mm')}">Date</small>
+                                    </div>
+                                    <p class="mb-1" th:text="${set.questions.size() + ' question(s)'}">5 questions</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+            
+            <div class="back-button">
+                <a th:href="@{/}" class="btn btn-primary">Back to Upload</a>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.select-checkbox');
+            const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+            const downloadWordBtn = document.getElementById('downloadWordBtn');
+            const selectAllBtn = document.getElementById('selectAllBtn');
+            const deselectAllBtn = document.getElementById('deselectAllBtn');
+            
+            // Function to update download buttons state
+            function updateDownloadButtons() {
+                const checkedCount = document.querySelectorAll('.select-checkbox:checked').length;
+                downloadPdfBtn.disabled = checkedCount === 0;
+                downloadWordBtn.disabled = checkedCount === 0;
+            }
+            
+            // Add event listeners to checkboxes
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', updateDownloadButtons);
+            });
+            
+            // Select All button
+            selectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = true;
+                });
+                updateDownloadButtons();
+            });
+            
+            // Deselect All button
+            deselectAllBtn.addEventListener('click', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+                updateDownloadButtons();
+            });
+            
+            // Initial update
+            updateDownloadButtons();
+        });
+    </script>
+</body>
+</html>

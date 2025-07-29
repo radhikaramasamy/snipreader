@@ -1,0 +1,54 @@
+plugins {
+    id 'java'
+    id 'org.springframework.boot' version '3.5.4'
+    id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    
+    // Database persistence
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'com.h2database:h2'
+    
+    // PDF generation
+    implementation 'com.itextpdf:itextpdf:5.5.13.3'
+    implementation 'org.xhtmlrenderer:flying-saucer-pdf:9.3.1'
+    implementation 'org.thymeleaf:thymeleaf:3.1.2.RELEASE'
+    
+    // Word document generation
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    
+    // Google AI (Gemini) client for image processing and AI integration
+    implementation 'com.google.cloud:google-cloud-aiplatform:3.53.0'
+    
+    // For handling multipart file uploads
+    implementation 'commons-io:commons-io:2.15.1'
+    
+    // For Base64 encoding/decoding
+    implementation 'commons-codec:commons-codec:1.16.0'
+    
+    // JSON processing
+    implementation 'com.google.code.gson:gson:2.10.1'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+tasks.named('test') {
+    useJUnitPlatform()
+}

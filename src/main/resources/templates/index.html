@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCQ Snip Reader</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        .container {
+            max-width: 800px;
+            margin-top: 50px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .upload-form {
+            background-color: #f8f9fa;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .instructions {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: #e9ecef;
+            border-radius: 10px;
+        }
+        .paste-area {
+            border: 2px dashed #ccc;
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            cursor: pointer;
+            min-height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        .paste-area.has-image {
+            border-style: solid;
+            padding: 5px;
+        }
+        .paste-area img {
+            max-width: 100%;
+            max-height: 300px;
+        }
+        .paste-instructions {
+            color: #6c757d;
+        }
+        .or-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+        .or-divider:before, .or-divider:after {
+            content: "";
+            display: block;
+            width: 45%;
+            height: 1px;
+            background: #dee2e6;
+            position: absolute;
+            top: 50%;
+        }
+        .or-divider:before {
+            left: 0;
+        }
+        .or-divider:after {
+            right: 0;
+        }
+        .tab-content {
+            padding-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCQ Snip Reader</h1>
+            <p class="lead">Paste or upload a screenshot of MCQ questions and get AI-generated answers</p>
+            <div class="mt-2">
+                <a th:href="@{/history}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-clock-history"></i> View History
+                </a>
+            </div>
+        </div>
+        
+        <div class="alert alert-danger" th:if="${error}" th:text="${error}"></div>
+        
+        <!-- Recent Sets Section -->
+        <div class="mb-4" th:if="${recentSets != null && !recentSets.isEmpty()}">
+            <h5 class="mb-3">Recent Question Sets</h5>
+            <div class="list-group">
+                <a th:each="set, iterStat : ${recentSets}" th:if="${iterStat.index < 3}"
+                   th:href="@{/results/{id}(id=${set.id})}" 
+                   class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                    <div>
+                        <span th:text="${set.title}">Question Set Title</span>
+                        <small class="text-muted ms-2" th:text="${set.questions.size() + ' question(s)'}">5 questions</small>
+                    </div>
+                    <small th:text="${#temporals.format(set.createdAt, 'yyyy-MM-dd HH:mm')}">Date</small>
+                </a>
+            </div>
+            <div class="text-end mt-2">
+                <a th:href="@{/history}" class="btn btn-link btn-sm">View All</a>
+            </div>
+        </div>
+        
+        <div class="upload-form">
+            <ul class="nav nav-tabs" id="inputTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="paste-tab" data-bs-toggle="tab" data-bs-target="#paste-pane" type="button" role="tab" aria-controls="paste-pane" aria-selected="true">Paste Image</button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-pane" type="button" role="tab" aria-controls="upload-pane" aria-selected="false">Upload File</button>
+                </li>
+            </ul>
+            
+            <div class="tab-content" id="inputTabsContent">
+                <!-- Paste Image Tab -->
+                <div class="tab-pane fade show active" id="paste-pane" role="tabpanel" aria-labelledby="paste-tab">
+                    <form id="pasteForm" th:action="@{/paste-image}" method="post" th:object="${imageUploadForm}">
+                        <div id="pasteArea" class="paste-area">
+                            <div id="pasteInstructions">
+                                <i class="bi bi-clipboard"></i>
+                                <p class="paste-instructions">Click here and paste image (Ctrl+V) or use keyboard shortcut anywhere on this page</p>
+                            </div>
+                            <img id="pastedImage" style="display: none;" />
+                            <input type="hidden" id="base64Image" name="base64Image" />
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button id="processPastedBtn" type="submit" class="btn btn-primary" disabled>Process Pasted Image</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Upload File Tab -->
+                <div class="tab-pane fade" id="upload-pane" role="tabpanel" aria-labelledby="upload-tab">
+                    <form th:action="@{/upload}" method="post" enctype="multipart/form-data" th:object="${imageUploadForm}">
+                        <div class="mb-3">
+                            <label for="image" class="form-label">Select a screenshot image:</label>
+                            <input type="file" class="form-control" id="image" name="image" accept="image/*" required>
+                            <div class="form-text">Supported formats: JPG, PNG, GIF, BMP</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Upload and Process</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h4>Instructions:</h4>
+            <ol>
+                <li>Take a screenshot of MCQ questions</li>
+                <li>Make sure the questions and options are clearly visible</li>
+                <li>Paste the screenshot directly or upload it using the form above</li>
+                <li>Wait for the AI to process and provide answers</li>
+            </ol>
+            <p><strong>Note:</strong> The quality of the answers depends on the clarity of the screenshot and the accuracy of the OCR text extraction.</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const pasteArea = document.getElementById('pasteArea');
+            const pasteInstructions = document.getElementById('pasteInstructions');
+            const pastedImage = document.getElementById('pastedImage');
+            const base64ImageInput = document.getElementById('base64Image');
+            const processPastedBtn = document.getElementById('processPastedBtn');
+            
+            // Function to handle pasted image
+            function handlePaste(e) {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        const blob = items[i].getAsFile();
+                        const reader = new FileReader();
+                        
+                        reader.onload = function(event) {
+                            // Display the image
+                            pastedImage.src = event.target.result;
+                            pastedImage.style.display = 'block';
+                            pasteInstructions.style.display = 'none';
+                            pasteArea.classList.add('has-image');
+                            
+                            // Store the base64 data
+                            const base64Data = event.target.result.split(',')[1];
+                            base64ImageInput.value = base64Data;
+                            
+                            // Enable the process button
+                            processPastedBtn.disabled = false;
+                        };
+                        
+                        reader.readAsDataURL(blob);
+                        break;
+                    }
+                }
+            }
+            
+            // Add event listeners
+            pasteArea.addEventListener('click', function() {
+                pasteArea.focus();
+            });
+            
+            pasteArea.addEventListener('paste', handlePaste);
+            document.addEventListener('paste', handlePaste);
+            
+            // Reset paste area when switching tabs
+            document.getElementById('upload-tab').addEventListener('click', function() {
+                pastedImage.style.display = 'none';
+                pasteInstructions.style.display = 'block';
+                pasteArea.classList.remove('has-image');
+                base64ImageInput.value = '';
+                processPastedBtn.disabled = true;
+            });
+        });
+    </script>
+</body>
+</html>
